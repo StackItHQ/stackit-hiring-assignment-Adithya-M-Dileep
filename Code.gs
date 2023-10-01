@@ -1,16 +1,43 @@
 function Codes() {
+
   var html= HtmlService.createHtmlOutputFromFile('SideBar')
       .setTitle('CSV Importer');
   var ui =SpreadsheetApp.getUi();
   ui.showSidebar(html);
+
 }
-function uploadCSV(csvData, selectedColumns,filterCriteriaValues) {
+
+var csvData;
+
+function convertToCsv(data){
+  try{
+
+  return Utilities.parseCsv(data);
+  }
+  catch (error){
+    return 'Error: ' + error.message;
+  }
+}
+
+function getCsvHeader(data){
+  try{
+
+    csvData=convertToCsv(data)
+    return csvData[0];
+  }
+  catch (error){
+    return 'Error: ' + error.message;
+  }
+}
+
+function uploadCSV(data,selectedColumns,filterCriteriaValues) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getActiveSheet();
 
-    const filteredData = [];
+    const csvData=convertToCsv(data);
 
+    const filteredData = [];
     // Iterate over rows in the CSV data
     for (const row of csvData) {
       let shouldInclude = true;
@@ -53,15 +80,6 @@ function uploadCSV(csvData, selectedColumns,filterCriteriaValues) {
 
     return 'CSV data imported successfully!';
   } catch (error) {
-    return 'Error: ' + error.message;
-  }
-}
-
-function convertToCsv(data){
-  try{
-  return csvData = Utilities.parseCsv(data);
-  }
-  catch (error){
     return 'Error: ' + error.message;
   }
 }

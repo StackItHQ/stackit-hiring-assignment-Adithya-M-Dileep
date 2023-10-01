@@ -83,10 +83,10 @@
       <button onclick="uploadFile()">Import</button>
       <div id="result"></div>
     </div>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
   <script>
     const droparea = document.querySelector(".droparea");
-    let csvData;
+    let file;
     let filterInputs = [];
 
 
@@ -102,12 +102,12 @@
     droparea.addEventListener("drop", (e) => {
       e.preventDefault();
 
-      const file = e.dataTransfer.files[0];
+      file = e.dataTransfer.files[0];
       const type = file.type;
       const columnSelect = document.getElementById('columnSelect');
       const resultDisplay = document.getElementById('result');
 
-      
+
       if (file){
             
             const reader = new FileReader();
@@ -120,19 +120,23 @@
                 else{
                 droparea.innerText = file.name.slice(0,8) +"..CSV";
                 }
-                resultDisplay.textContent=file.type;
-
+                
                 google.script.run.withSuccessHandler(function(response) {
-                  csvData=response;
+                  
+                  csvDataHeaders=response;
+
+                  // Clear the previous options
+                  columnSelect.innerHTML = '';
+                  filterCriteria.innerHTML = '';
+
                   //Create options for each column
-                  for (let i = 0; i < csvData[0].length; i++) {
-                    resultDisplay.textContent =resultDisplay.textContent +","+i;
+                  for (let i = 0; i < csvDataHeaders.length; i++) {
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     checkbox.name = 'selectedColumns';
                     checkbox.value = i.toString();
                     const label = document.createElement('label');
-                    label.textContent =(i + 1)+") "+csvData[0][i];
+                    label.textContent =(i + 1)+") "+csvDataHeaders[i];
                     
                     // Append checkbox and label to the container
                     columnSelect.appendChild(checkbox);
@@ -142,17 +146,14 @@
                     // Create filter input for each column
                     const filterInput = document.createElement('input');
                     filterInput.type = 'text';
-                    filterInput.placeholder = 'Filter for '+csvData[0][i];
+                    filterInput.placeholder = 'Filter for '+csvDataHeaders[i];
                     filterCriteria.appendChild(filterInput);
                     filterInputs.push(filterInput);
 
                   }
               }).withFailureHandler(function(error) {
                 resultDisplay.textContent = 'Error: ' + error;
-              }).convertToCsv(e.target.result);
-                // Clear the previous options
-                columnSelect.innerHTML = '';
-
+              }).getCsvHeader(e.target.result);
                 
               resultDisplay.textContent = 'Columns listed. Select columns and specify filter criteria.';
 
@@ -170,15 +171,24 @@
       const filterCriteriaValues = Array.from(filterInputs).map(input => input.value.trim());
       const resultDisplay = document.getElementById('result');
 
-      if (csvData && selectedColumns.length > 0) {
-        google.script.run.withSuccessHandler(function(response) {
-            resultDisplay.textContent = response;
-          }).withFailureHandler(function(error) {
-            resultDisplay.textContent = 'Error: ' + error;
-          }).uploadCSV(csvData, selectedColumns,filterCriteriaValues);
+      if (file && selectedColumns.length > 0) {
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+
+              google.script.run.withSuccessHandler(function(response) {
+                  resultDisplay.textContent = response;
+                }).withFailureHandler(function(error) {
+                  resultDisplay.textContent = 'Error: ' + error;
+                }).uploadCSV(e.target.result,selectedColumns,filterCriteriaValues);
+
+            };
+            reader.readAsText(file);
+
+
+
         
-        resultDisplay.textContent = 'Selected columns: ' + selectedColumns.join(', ') +
-          '<br>Filter criteria: ' + filterCriteriaValues.join(', ');
+        resultDisplay.textContent = "..::..";
       } else {
         resultDisplay.textContent = 'Please list columns and select at least one column to import.';
       }
