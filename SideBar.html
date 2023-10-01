@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma-rtl.min.css">
+    <style>
+      * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins";
+    }
+    body {
+      background-color: #091921;
+      color: #fff;
+    }
+
+    .container {
+      height:100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Keep the styles for the droparea */
+    .droparea {
+      height: 200px;
+      width: 200px;
+      border: 1px dashed gray;
+      color: gray;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 1em;
+    }
+
+    /* Style for the label */
+    label {
+      margin-bottom: 0.5em;
+      font-weight: bold;
+    }
+
+    /* Style for the select element */
+    #columnSelect,#filterCriteria {
+      width: 100%;
+      padding: 0.5em;
+      margin-bottom: 1em;
+      border: 1px solid gray;
+    }
+
+    /* Style for the button */
+    button {
+      background-color: green;
+      color: #fff;
+      padding: 0.5em 1em;
+      border: none;
+      cursor: pointer;
+      margin-bottom: 1em;
+    }
+
+    /* Style for the result div */
+    #result {
+      background-color: #091921;
+      color: #fff;
+      padding: 1em;
+      border: 1px solid gray;
+      width: 100%;
+      text-align: center;
+    }
+
+
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="droparea">Drop the Image Here</div>
+        <label>Select columns to import:</label>
+        <div id="columnSelect"></div>
+        <br>
+        <label>Filter criteria:</label>
+        <div id="filterCriteria"></div>
+        <br>
+      <button onclick="uploadFile()">Import</button>
+      <div id="result"></div>
+    </div>
+
+  <script>
+    const droparea = document.querySelector(".droparea");
+    let csvData;
+    let filterInputs = [];
+
+
+    droparea.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      droparea.classList.add("hover");
+    });
+
+    droparea.addEventListener("dragleave", () => {
+      droparea.classList.remove("hover");
+    });
+
+    droparea.addEventListener("drop", (e) => {
+      e.preventDefault();
+
+      const file = e.dataTransfer.files[0];
+      const type = file.type;
+      const columnSelect = document.getElementById('columnSelect');
+      const resultDisplay = document.getElementById('result');
+
+      
+      if (file){
+            
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                droparea.setAttribute("class", "droparea valid");
+                if (file.name.length<=14){
+                  droparea.innerText = file.name+".CSV"
+                }
+                else{
+                droparea.innerText = file.name.slice(0,8) +"..CSV";
+                }
+                resultDisplay.textContent=file.type;
+
+                google.script.run.withSuccessHandler(function(response) {
+                  csvData=response;
+                  //Create options for each column
+                  for (let i = 0; i < csvData[0].length; i++) {
+                    resultDisplay.textContent =resultDisplay.textContent +","+i;
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.name = 'selectedColumns';
+                    checkbox.value = i.toString();
+                    const label = document.createElement('label');
+                    label.textContent =(i + 1)+") "+csvData[0][i];
+                    
+                    // Append checkbox and label to the container
+                    columnSelect.appendChild(checkbox);
+                    columnSelect.appendChild(label);
+                    columnSelect.appendChild(document.createElement('br'));
+
+                    // Create filter input for each column
+                    const filterInput = document.createElement('input');
+                    filterInput.type = 'text';
+                    filterInput.placeholder = 'Filter for '+csvData[0][i];
+                    filterCriteria.appendChild(filterInput);
+                    filterInputs.push(filterInput);
+
+                  }
+              }).withFailureHandler(function(error) {
+                resultDisplay.textContent = 'Error: ' + error;
+              }).convertToCsv(e.target.result);
+                // Clear the previous options
+                columnSelect.innerHTML = '';
+
+                
+              resultDisplay.textContent = 'Columns listed. Select columns and specify filter criteria.';
+
+            };
+            reader.readAsText(file);
+      }
+      else{
+        droparea.innerText = "Drop the CSV Here";
+      }
+
+    });
+    function uploadFile() {
+      const checkboxes = document.querySelectorAll('input[name="selectedColumns"]:checked');
+      const selectedColumns = Array.from(checkboxes).map(checkbox => parseInt(checkbox.value, 10));
+      const filterCriteriaValues = Array.from(filterInputs).map(input => input.value.trim());
+      const resultDisplay = document.getElementById('result');
+
+      if (csvData && selectedColumns.length > 0) {
+        google.script.run.withSuccessHandler(function(response) {
+            resultDisplay.textContent = response;
+          }).withFailureHandler(function(error) {
+            resultDisplay.textContent = 'Error: ' + error;
+          }).uploadCSV(csvData, selectedColumns,filterCriteriaValues);
+        
+        resultDisplay.textContent = 'Selected columns: ' + selectedColumns.join(', ') +
+          '<br>Filter criteria: ' + filterCriteriaValues.join(', ');
+      } else {
+        resultDisplay.textContent = 'Please list columns and select at least one column to import.';
+      }
+    }
+
+  </script>
+  </body>
+</html>
