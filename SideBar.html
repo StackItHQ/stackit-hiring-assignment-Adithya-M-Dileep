@@ -43,6 +43,8 @@
     /* Style for the select element */
     #columnSelect,#filterCriteria {
       width: 100%;
+      max-height: 200px;
+      overflow-y: auto;
       padding: 0.5em;
       margin-bottom: 1em;
       border: 1px solid gray;
@@ -57,7 +59,14 @@
       cursor: pointer;
       margin-bottom: 1em;
     }
-
+    .hover {
+      color: #fff;
+      border: 1px dashed #fff;
+    }
+    .fileDropped{
+      color: #fff;
+      border: 1px dashed green;     
+    }
     /* Style for the result div */
     #result {
       background-color: #091921;
@@ -73,7 +82,7 @@
   </head>
   <body>
     <div class="container">
-      <div class="droparea">Drop the Image Here</div>
+      <div class="droparea">Drop the CSV Here</div>
         <label>Select columns to import:</label>
         <div id="columnSelect"></div>
         <br>
@@ -103,6 +112,7 @@
 
     droparea.addEventListener("drop", (e) => {
       e.preventDefault();
+      droparea.classList.remove("hover");
 
       file = e.dataTransfer.files[0];
       const fileName = file.name;
@@ -111,6 +121,7 @@
 
 
       if (file && fileName.endsWith(".csv")){
+        droparea.classList.add("fileDropped");
             
             const reader = new FileReader();
 
@@ -122,9 +133,7 @@
                 const header = lines[0].trim();
                 const headers = header.split(',');
 
-
-
-                droparea.setAttribute("class", "droparea valid");
+                
                 if (file.name.length<=14){
                   droparea.innerText = file.name+".CSV"
                 }
@@ -163,7 +172,7 @@
             reader.readAsText(file);
       }
       else{
-        droparea.innerText = "Drop the CSV Here";
+        droparea.innerText = "Only CSV files are accepted";
       }
 
     });
