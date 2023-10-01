@@ -48,14 +48,51 @@ Once you're done, make sure you **record a video** showing your project working.
 
 We have a checklist at the bottom of this README file, which you should update as your progress with your assignment. It will help us evaluate your project.
 
-- [ ] My code's working just fine! 🥳
-- [ ] I have recorded a video showing it working and embedded it in the README ▶️
-- [ ] I have tested all the normal working cases 😎
-- [ ] I have even solved some edge cases (brownie points) 💪
-- [ ] I added my very planned-out approach to the problem at the end of this README 📜
+- [x] My code's working just fine! 🥳
+- [x] I have recorded a video showing it working and embedded it in the README ▶️
+- [x] I have tested all the normal working cases 😎
+- [x] I have even solved some edge cases (brownie points) 💪
+- [x] I added my very planned-out approach to the problem at the end of this README 📜
 
 ## Got Questions❓
 Feel free to check the discussions tab, you might get something of help there. Check out that tab before reaching out to us. Also, did you know, the internet is a great place to explore 😛
 
 ## Developer's Section
-*Add your video here, and your approach to the problem (optional). Leave some comments for us here if you want, we will be reading this :)*
+
+DEMO VIDEO : [click here](https://drive.google.com/file/d/1mUHXhEiTDP6EZIFi69sUDZfJpOCQY3XI/view?usp=drive_link)
+
+#### 1. Accepting CSV Files:
+- The system will only accept CSV files. It should validate file formats to ensure that only CSV files are processed.
+
+#### 2. Filtering Capabilities:
+- Users can add filters to columns:
+  - Leaving the filter criteria blank indicates no filter for that column.
+  - Using "~" as the filter criteria removes rows with null values in that column
+  - Filters can be based on ">", "<", or "=" for numeric data.
+  - Filters can also work with strings based on lexicographic order for text data.
+
+#### 3. Sheet Selection:
+- Users can choose to add the imported data to a new sheet or the current active sheet in their Google Sheets document.
+
+#### 4. Batch Processing:
+- For large CSV files, the system will implement batch processing
+  - It will process the CSV data in batches of 1000 rows at a time to prevent memory and performance issues.
+  - Filters will be applied to each batch separately, and the results will be combined.
+
+#### 5. User Interface:
+- Upon receiving the CSV file, the system will:
+    - Separate the header and display it in the frontend.
+    - Provide checkboxes for users to select columns they want to import.
+    - Offer filter sections for each column.
+- Users can select the desired columns and apply filters as needed.
+
+#### 6. Import Process:
+- When the user initiates the import process, The frontend will send the CSV file along with an array of selected columns and their corresponding filter criteria to the backend.
+
+#### 7.Backend Processing:
+- The backend will:
+    - Separate the CSV data into batches of 1000 rows each.
+    - For each batch, apply the specified filters based on selected columns.
+    - Create a filtered list of rows that meet the filter criteria.
+    - Combine the filtered lists from all batches.
+    - Add the filtered data to the selected sheet in the Google Sheets document.
